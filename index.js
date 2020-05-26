@@ -4,24 +4,21 @@ var https = require('https')
 var fs = require('fs')
 
 function getImageData (json) {
-  var images = json.images || json.album.images
-  var name = json.images ? json.name : json.album.name
+  let image = {
+    name: `${json.title}-${json.thumbnail_width}x${json.thumbnail_height}`,
+    url: json.thumbnail_url
+  }
 
-  var image = images.reduce((x, y) => {
-    return x.height * x.width > y.height * y.width ? x : y
-  })
-
-  name = `${name}-${image.width}x${image.height}`
-
-  return { name: name, url: image.url }
+  return image;
 }
 
 function downloadImage (imageUrl, imageName) {
   var outFile = imageName + '.jpg'
   var coverFile = fs.createWriteStream(outFile)
-  console.log(`Downloading '${outFile}'`)
+  console.log(`Downloading '${outFile}'...`)
   https.get(imageUrl, (res) => {
     res.pipe(coverFile)
+    console.log("Done!");
   })
 }
 
@@ -45,27 +42,29 @@ function getJson (res) {
 // This will allow usage with all Spotify URLs I'm aware of - play., open.
 // and spotify: - but I recommend the latter because it won't contain any
 // weird characters, hopefully.
+
 function getApiUrl (str) {
   if (/(?:album|artist|track)s?[:/][A-Za-z0-9]{22}/.test(str)) {
-    return str.replace(/^.*(artist|album|track)s?[:/]([A-Za-z0-9]{22})$/, (p0, p1, p2) => {
-      return `https://api.spotify.com/v1/${p1}s/${p2}`
-    })
+      return `https://open.spotify.com/oembed?url=` + str;
   } else {
-    return false
+    console.error(str + " does not look like a valid spotify url, so won't be downloaded.");
+    return false;
   }
 }
 
-function startFetching (url) {
-  var apiUrl = getApiUrl(url)
+function startFetching (urls) {
+  apiUrls = [];
 
-  // Exit with error message if the URL is invalid
-  if (!apiUrl) {
-    console.log(`'${url}' is not a valid Spotify URL`)
-    return
+  urls.forEach((url) => {
+    if(getApiUrl(url)){
+      apiUrls.push(getApiUrl(url));
+    }
+  })
+
+  for(x in apiUrls){
+    // Commence callback hell
+    https.get(apiUrls[x], getJson);
   }
-
-  // Commence callback hell
-  https.get(apiUrl, getJson)
 }
 
 module.exports = (args) => {
@@ -76,6 +75,5 @@ module.exports = (args) => {
   }
 
   var urls = typeof args === 'string' ? [args] : args
-
-  urls.forEach(startFetching)
+  startFetching(urls);
 }
