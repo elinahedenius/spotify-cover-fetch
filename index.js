@@ -3,37 +3,12 @@
 var https = require('https')
 var fs = require('fs')
 
-function getImageData (json) {
-  let image = {
-    name: `${json.title}-${json.thumbnail_width}x${json.thumbnail_height}`,
-    url: json.thumbnail_url
-  }
-
-  return image;
-}
-
-function downloadImage (imageUrl, imageName) {
-  var outFile = imageName + '.jpg'
+function downloadImage (img) {
+  var outFile = img.name + '.jpg'
   var coverFile = fs.createWriteStream(outFile)
   console.log(`Downloading '${outFile}'...`)
-  https.get(imageUrl, (res) => {
-    res.pipe(coverFile)
-    console.log("Done!");
-  })
-}
-
-function getJson (res) {
-  var allData
-
-  res.on('data', (data) => {
-    if (!allData) allData = data
-    else allData += data
-  })
-
-  res.on('end', () => {
-    var json = JSON.parse(allData)
-    var image = getImageData(json)
-    downloadImage(image.url, image.name)
+  https.get(img.src, (res) => {
+    res.pipe(coverFile);
   })
 }
 
@@ -43,31 +18,8 @@ function getJson (res) {
 // and spotify: - but I recommend the latter because it won't contain any
 // weird characters, hopefully.
 
-function getApiUrl (str) {
-  if (/(?:album|artist|track)s?[:/][A-Za-z0-9]{22}/.test(str)) {
-      return `https://open.spotify.com/oembed?url=` + str;
-  } else {
-    console.error(str + " does not look like a valid spotify url, so won't be downloaded.");
-    return false;
-  }
-}
+function getApiUrls (args) {
 
-function startFetching (urls) {
-  apiUrls = [];
-
-  urls.forEach((url) => {
-    if(getApiUrl(url)){
-      apiUrls.push(getApiUrl(url));
-    }
-  })
-
-  for(x in apiUrls){
-    // Commence callback hell
-    https.get(apiUrls[x], getJson);
-  }
-}
-
-module.exports = (args) => {
   // Exit with error message if no URLs are supplied
   if (args.length <= 0) {
     console.log('You need to supply a Spotify URL')
@@ -75,5 +27,87 @@ module.exports = (args) => {
   }
 
   var urls = typeof args === 'string' ? [args] : args
-  startFetching(urls);
+
+  apiUrls = [];
+
+  urls.forEach((str) => {
+    if (/(?:album|artist|track)s?[:/][A-Za-z0-9]{22}/.test(str)) {
+        apiUrls.push(`https://open.spotify.com/oembed?url=` + str);
+    } else {
+      console.error(`"${str}" does not look like a valid spotify url, so I won't try anything with it.`);
+    }
+  })
+
+  return apiUrls;
+}
+
+function getImgData(url){
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      var allData
+
+      res.on('error', (err) => {
+        reject(err);
+      });
+
+      res.on('data', (data) => {
+        if (!allData) allData = data
+        else allData += data
+      })
+
+      res.on('end', () => {
+        var json = JSON.parse(allData)
+
+        let img = {
+          name: `${json.title}-${json.thumbnail_width}x${json.thumbnail_height}`,
+          src: json.thumbnail_url
+        }
+
+        resolve(img);
+      })
+    })
+  })
+}
+
+async function askForData(url){
+  try {
+    let img = await getImgData(url);
+    return img;
+  }
+  catch(e){
+    console.error(e);
+  }
+}
+
+async function getImages(args){
+  apiUrls = getApiUrls(args);
+
+  let images = [];
+
+  for(x in apiUrls){
+    let img = await askForData(apiUrls[x]);
+    images.push(img);
+  }
+
+  return images;
+}
+
+module.exports = {
+  getSrc: async (args) => {
+    let images = await getImages(args);
+
+    imgSrc = [];
+
+    images.forEach((img) => {
+      imgSrc.push(img.src);
+    });
+
+    return imgSrc;
+  },
+
+  download: async (args) => {
+    let images = await getImages(args);
+
+    images.forEach(downloadImage);
+  }
 }
