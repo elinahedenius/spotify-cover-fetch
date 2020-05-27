@@ -19,25 +19,30 @@ because it won't contain any weird characters, hopefully.
 #### Examples:
 
 ##### Command-line:
+download:
 ```
-$ spotify-cover-fetch spotify:track:6PVfRMTytzNlq9P1BP3Jl0
+$ spotify-cover-fetch -download spotify:track:6PVfRMTytzNlq9P1BP3Jl0
+```
+get image url:
+```
+$ spotify-cover-fetch -getsrc spotify:track:6PVfRMTytzNlq9P1BP3Jl0
 ```
 
 ##### ...with multiple URLs:
 ```
-$ spotify-cover-fetch spotify:track:6PVfRMTytzNlq9P1BP3Jl0 spotify:album:4GMgNPA4fMv3U0QQsdRLJk
+$ spotify-cover-fetch -download spotify:track:6PVfRMTytzNlq9P1BP3Jl0 spotify:album:4GMgNPA4fMv3U0QQsdRLJk
 ```
 
 ##### As a module:
 ```javascript
 var scf = require('spotify-cover-fetch')
-scf('spotify:track:6PVfRMTytzNlq9P1BP3Jl0')
+scf.getSrc('spotify:track:6PVfRMTytzNlq9P1BP3Jl0')
 ```
 
 ##### ...with multiple URLs:
 ```javascript
 var scf = require('spotify-cover-fetch')
-scf(['spotify:track:6PVfRMTytzNlq9P1BP3Jl0', 'spotify:album:4GMgNPA4fMv3U0QQsdRLJk'])
+scf.dowload(['spotify:track:6PVfRMTytzNlq9P1BP3Jl0', 'spotify:album:4GMgNPA4fMv3U0QQsdRLJk'])
 ```
 
 ### License
