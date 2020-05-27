@@ -12,6 +12,7 @@ function downloadImage (img) {
   })
 }
 
+// takes the track ids and turns them into nice lil api urls
 function getApiUrls (args) {
 
   // Exit with error message if no URLs are supplied
@@ -40,6 +41,8 @@ function getApiUrls (args) {
   return apiUrls;
 }
 
+// takes a url and returns a promise that resolves once the https.get
+// has gotten image data from the url and made it into a nice lil object
 function getImgData(url){
   return new Promise((resolve, reject) => {
     https.get(url, (res) => {
