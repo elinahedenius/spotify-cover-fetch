@@ -42,7 +42,7 @@ scf.getSrc('spotify:track:6PVfRMTytzNlq9P1BP3Jl0')
 ##### ...with multiple URLs:
 ```javascript
 var scf = require('spotify-cover-fetch')
-scf.dowload(['spotify:track:6PVfRMTytzNlq9P1BP3Jl0', 'spotify:album:4GMgNPA4fMv3U0QQsdRLJk'])
+scf.download(['spotify:track:6PVfRMTytzNlq9P1BP3Jl0', 'spotify:album:4GMgNPA4fMv3U0QQsdRLJk'])
 ```
 
 ### License
