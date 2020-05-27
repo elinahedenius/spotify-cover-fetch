@@ -12,12 +12,6 @@ function downloadImage (img) {
   })
 }
 
-// Check if the supplied string contains a validish Spotify IDs, meaning
-// that it checks for something similar to track:6PVfRMTytzNlq9P1BP3Jl0
-// This will allow usage with all Spotify URLs I'm aware of - play., open.
-// and spotify: - but I recommend the latter because it won't contain any
-// weird characters, hopefully.
-
 function getApiUrls (args) {
 
   // Exit with error message if no URLs are supplied
@@ -30,6 +24,11 @@ function getApiUrls (args) {
 
   apiUrls = [];
 
+  // Check if the supplied string contains a validish Spotify IDs, meaning
+  // that it checks for something similar to track:6PVfRMTytzNlq9P1BP3Jl0
+  // This will allow usage with all Spotify URLs I'm aware of - play., open.
+  // and spotify: - but I recommend the latter because it won't contain any
+  // weird characters, hopefully.
   urls.forEach((str) => {
     if (/(?:album|artist|track)s?[:/][A-Za-z0-9]{22}/.test(str)) {
         apiUrls.push(`https://open.spotify.com/oembed?url=` + str);
@@ -69,24 +68,19 @@ function getImgData(url){
   })
 }
 
-async function askForData(url){
-  try {
-    let img = await getImgData(url);
-    return img;
-  }
-  catch(e){
-    console.error(e);
-  }
-}
-
 async function getImages(args){
   apiUrls = getApiUrls(args);
 
   let images = [];
 
   for(x in apiUrls){
-    let img = await askForData(apiUrls[x]);
-    images.push(img);
+    try{
+      let img = await getImgData(apiUrls[x]);
+      images.push(img);
+    }
+    catch(e){
+      console.error(e);
+    }
   }
 
   return images;
